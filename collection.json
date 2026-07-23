@@ -1,0 +1,143 @@
+{
+    "info": {
+        "name": "Landing Page API",
+        "description": "REST API for developer landing page with contact form, health check, metrics, and AI sentiment analysis.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_postman_id": "landing-page-api-collection"
+    },
+    "item": [
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/health",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "health"]
+                        },
+                        "description": "Returns the API health status and current timestamp."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Contact",
+            "item": [
+                {
+                    "name": "Submit Contact Form",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"John Doe\",\n    \"phone\": \"+1234567890\",\n    \"email\": \"john@example.com\",\n    \"comment\": \"Great work on the landing page!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/contact",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "contact"]
+                        },
+                        "description": "Submit a contact form message. Returns AI sentiment analysis result."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Submit Contact Form (Invalid)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"\",\n    \"phone\": \"\",\n    \"email\": \"invalid-email\",\n    \"comment\": \"\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/contact",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "contact"]
+                        },
+                        "description": "Test validation errors — should return 422."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Metrics",
+            "item": [
+                {
+                    "name": "Get Metrics",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/metrics",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "metrics"]
+                        },
+                        "description": "Returns contact form submission statistics (today, week, total)."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Swagger Documentation",
+            "item": [
+                {
+                    "name": "Swagger UI",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/docs",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "docs"]
+                        },
+                        "description": "OpenAPI/Swagger interactive documentation UI."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string"
+        }
+    ]
+}
