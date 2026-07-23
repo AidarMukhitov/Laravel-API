@@ -8,7 +8,7 @@ REST API for a developer landing page with contact form, health check, metrics, 
 
 | Layer | Technology |
 |---|---|
-| **Framework** | Laravel 13.8 (PHP 8.1+) |
+| **Framework** | Laravel 13 (PHP 8.1+) |
 | **AI** | OpenAI GPT-4o-mini via Guzzle HTTP client |
 | **Cache** | File driver (no Redis required) |
 | **Mail** | Laravel Mail (log driver by default, SMTP configurable) |
@@ -16,7 +16,47 @@ REST API for a developer landing page with contact form, health check, metrics, 
 
 ---
 
+## Architecture
 
+```
+┌──────────────┐      ┌──────────────────┐      ┌─────────────────┐
+│   Routes     │─────▶│   Controllers    │─────▶│   Services      │
+│   (api.php)  │      │ ContactController│      │ ContactService  │
+│              │      │ HealthController │      │ AIService       │
+│              │      │ MetricsController│      │ MetricsService  │
+└──────────────┘      └──────────────────┘      └─────────────────┘
+                              │                         │
+                      ┌───────┴───────┐        ┌────────┴────────┐
+                      │   Middleware  │        │   File Storage  │
+                      │  RateLimit    │        │   metrics.json  │
+                      │  ApiLogger    │        │   storage/app/  │
+                      │  Cors         │        └─────────────────┘
+                      └───────────────┘
+```
+
+### Request Flow (POST /api/contact)
+
+1. **CorsMiddleware** — adds CORS headers
+2. **RateLimit** — checks file cache for attempts from this IP (max 3/min)
+3. **ApiLogger** — logs request start, passes to controller
+4. **ContactFormRequest** — validates input, returns 422 on failure
+5. **ContactController** → **ContactService** → orchestrates:
+   - `AIService.analyzeSentiment()` — calls OpenAI API with fallback to "neutral"
+   - Sends email to site owner + confirmation to user
+   - `MetricsService.increment()` — updates `metrics.json`
+6. Returns JSON with message + sentiment
+
+---
+
+## API Endpoints
+
+| Method | Path | Description | Rate Limited |
+|---|---|---|---|
+| `POST` | `/api/contact` | Submit contact form | ✅ (3/min per IP) |
+| `GET` | `/api/health` | Health check | ❌ |
+| `GET` | `/api/metrics` | Contact statistics | ❌ |
+
+---
 
 ## Setup Instructions
 
@@ -198,6 +238,8 @@ Format: `[timestamp] METHOD URL IP STATUS response_time_ms`
 - **Limit:** 3 requests per minute per IP (configurable via `.env`)
 - **Storage:** File cache (`storage/framework/cache/data`)
 - **Response on exceed:** `429 Too Many Requests`
+
+---
 
 ---
 
