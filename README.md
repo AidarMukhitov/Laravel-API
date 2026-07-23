@@ -8,57 +8,15 @@ REST API for a developer landing page with contact form, health check, metrics, 
 
 | Layer | Technology |
 |---|---|
-| **Framework** | Laravel 10 (PHP 8.1+) |
+| **Framework** | Laravel 13.8 (PHP 8.1+) |
 | **AI** | OpenAI GPT-4o-mini via Guzzle HTTP client |
-| **Documentation** | OpenAPI 3.0 via `darkaonline/l5-swagger` |
 | **Cache** | File driver (no Redis required) |
 | **Mail** | Laravel Mail (log driver by default, SMTP configurable) |
 | **Logging** | Monolog (separate channels: `api`, `ai`, `single`) |
 
 ---
 
-## Architecture
 
-```
-┌──────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│   Routes     │─────▶│   Controllers    │─────▶│   Services      │
-│   (api.php)  │      │ ContactController│      │ ContactService  │
-│              │      │ HealthController │      │ AIService       │
-│              │      │ MetricsController│      │ MetricsService  │
-└──────────────┘      └──────────────────┘      └─────────────────┘
-                              │                         │
-                      ┌───────┴───────┐        ┌────────┴────────┐
-                      │   Middleware  │        │   File Storage  │
-                      │  RateLimit    │        │   metrics.json  │
-                      │  ApiLogger    │        │   storage/app/  │
-                      │  Cors         │        └─────────────────┘
-                      └───────────────┘
-```
-
-### Request Flow (POST /api/contact)
-
-1. **CorsMiddleware** — adds CORS headers
-2. **RateLimit** — checks file cache for attempts from this IP (max 3/min)
-3. **ApiLogger** — logs request start, passes to controller
-4. **ContactFormRequest** — validates input, returns 422 on failure
-5. **ContactController** → **ContactService** → orchestrates:
-   - `AIService.analyzeSentiment()` — calls OpenAI API with fallback to "neutral"
-   - Sends email to site owner + confirmation to user
-   - `MetricsService.increment()` — updates `metrics.json`
-6. Returns JSON with message + sentiment
-
----
-
-## API Endpoints
-
-| Method | Path | Description | Rate Limited |
-|---|---|---|---|
-| `POST` | `/api/contact` | Submit contact form | ✅ (3/min per IP) |
-| `GET` | `/api/health` | Health check | ❌ |
-| `GET` | `/api/metrics` | Contact statistics | ❌ |
-| `GET` | `/api/docs` | Swagger UI | ❌ |
-
----
 
 ## Setup Instructions
 
@@ -243,22 +201,6 @@ Format: `[timestamp] METHOD URL IP STATUS response_time_ms`
 
 ---
 
-## Swagger / OpenAPI Documentation
-
-Interactive API documentation is available at:
-
-```
-http://localhost:8000/api/docs
-```
-
-To regenerate the documentation after code changes:
-
-```bash
-php artisan l5-swagger:generate
-```
-
----
-
 ## Postman Collection
 
 Import `collection.json` into Postman to test all endpoints. The collection includes:
@@ -266,7 +208,6 @@ Import `collection.json` into Postman to test all endpoints. The collection incl
 - Health check
 - Contact form submission (valid and invalid)
 - Metrics retrieval
-- Swagger UI link
 
 ---
 
@@ -301,7 +242,7 @@ testTask/
 │       └── MetricsService.php          # File-based metrics
 ├── bootstrap/app.php
 ├── config/
-│   ├── app.php, cache.php, cors.php, logging.php, mail.php, l5-swagger.php
+│   ├── app.php, cache.php, cors.php, logging.php, mail.php
 ├── resources/views/emails/contact.blade.php
 ├── routes/
 │   ├── api.php, web.php, console.php
@@ -325,7 +266,6 @@ Specifically AI-generated:
 - All PHP source files (controllers, services, middleware, requests, mail)
 - All configuration files
 - Email templates
-- API documentation (Swagger annotations)
 - README.md
 - Postman collection
 - `.env.example`
